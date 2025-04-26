@@ -14,7 +14,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
 export interface User {
   id: string;
-  email: string;
+  username: string;
   role: 'user' | 'admin';
   name: string;
 }
@@ -23,7 +23,7 @@ export interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  login: (email: string, password: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
   isAdmin: boolean;
@@ -39,48 +39,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setLoading(false);
-        return;
+    const checkAuth = () => {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        setUser(JSON.parse(userData));
       }
-
-      try {
-        const response = await fetch(`${API_URL}/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json'
-          }
-        });
-        const data = await response.json();
-
-        if (!response.ok) {
-          const msg =
-            (data && (data.message || data.error || data.error?.message)) ||
-            'Session expirée';
-          throw new Error(msg);
-        }
-
-        setUser({
-          id: data.id || data._id || '',
-          email: data.email,
-          name: data.name || data.username || data.email.split('@')[0],
-          role: data.role || 'user'
-        });
-      } catch (err) {
-        console.error('Erreur checkAuth:', err);
-        localStorage.removeItem('token');
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-      } finally {
-        setLoading(false);
-      }
+      setLoading(false);
     };
 
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (username: string, password: string) => {
     try {
       const response = await fetch(`${API_URL}/auth/login`, {
         method: 'POST',
@@ -88,33 +58,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           'Content-Type': 'application/json',
           'Accept': 'application/json'
         },
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ username, password }),
       });
       const data = await response.json();
 
       if (!response.ok) {
-        const msg =
-          (data && (data.message || data.error || data.error?.message)) ||
-          'Erreur de connexion';
-        throw new Error(msg);
+        throw new Error(data.error || 'Erreur de connexion');
       }
 
-      if (!data.token) {
-        throw new Error('Réponse invalide : token manquant');
-      }
-      localStorage.setItem('token', data.token);
+      const userData = {
+        id: data.id,
+        username: data.username,
+        name: data.username,
+        role: data.role
+      };
 
-      const userData = data.user || data;
-      if (!userData || !userData.email) {
-        throw new Error('Données utilisateur invalides');
-      }
-
-      setUser({
-        id: userData.id || userData._id || '',
-        email: userData.email,
-        name: userData.name || userData.username || email.split('@')[0],
-        role: userData.role || 'user'
-      });
+      localStorage.setItem('user', JSON.stringify(userData));
+      setUser(userData);
       setError(null);
     } catch (err) {
       console.error('Erreur login:', err);
@@ -125,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
+    localStorage.removeItem('user');
     setUser(null);
     router.push('/login');
   };

@@ -17,12 +17,10 @@ export default function Header() {
   const { user, loading, isAuthenticated, isAdmin, logout } = useAuth();
   const router = useRouter();
 
-  // On ne propose pas de se déconnecter tant qu'on est en train de vérifier le user
   if (loading) {
     return (
       <header className="bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg">
         <nav className="mx-auto max-w-7xl p-6 text-white">
-          {/* Vous pouvez mettre un spinner ici si vous voulez */}
           <span>Chargement...</span>
         </nav>
       </header>
@@ -33,7 +31,7 @@ export default function Header() {
     !item.requireAuth || (item.requireAuth && isAuthenticated)
   );
 
-  const displayName = user?.name || 'Utilisateur';
+  const displayName = user?.name || user?.username || 'Utilisateur';
 
   return (
     <header className="bg-gradient-to-r from-blue-600 to-indigo-600 shadow-lg">

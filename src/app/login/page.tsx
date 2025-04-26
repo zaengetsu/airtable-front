@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import Link from 'next/link';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
-
 export default function Login() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -22,22 +20,8 @@ export default function Login() {
 
     try {
       console.log('Tentative de connexion avec:', { username });
-      const response = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Erreur lors de la connexion');
-      }
-
-      const data = await response.json();
-      console.log('Réponse de connexion:', data);
-      login(data.token, { username: data.username, role: data.role });
+      await login(username, password);
+      console.log('Connexion réussie, redirection vers /');
       router.push('/');
     } catch (err) {
       console.error('Erreur de connexion:', err);
