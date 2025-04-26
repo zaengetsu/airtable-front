@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Header from '@/components/Header';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { PaperClipIcon } from '@heroicons/react/20/solid';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
 
@@ -158,7 +159,6 @@ export default function ProjectDetail() {
               </Link>
               <button
                 onClick={() => {
-                  // Logique de suppression à implémenter
                   if (window.confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
                     // Appel API pour supprimer le projet
                   }
@@ -183,131 +183,148 @@ export default function ProjectDetail() {
           )}
 
           <div className="p-6">
-            <div className="flex justify-between items-start mb-4">
-              <h1 className="text-3xl font-bold">{project.name}</h1>
-              <div className="flex items-center gap-4">
-                <button
-                  onClick={handleLike}
-                  disabled={likeLoading}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
-                    project.isLiked 
-                      ? 'bg-red-100 text-red-600' 
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                  }`}
-                >
-                  <span>{project.likes}</span>
-                  <svg 
-                    className={`w-5 h-5 ${project.isLiked ? 'fill-red-600' : 'fill-gray-600'}`}
-                    viewBox="0 0 24 24"
-                  >
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                  </svg>
-                </button>
-                <div className="flex gap-2">
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    project.status === 'En cours' ? 'bg-yellow-100 text-yellow-800' :
-                    project.status === 'Terminé' ? 'bg-green-100 text-green-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}>
-                    {project.status}
-                  </span>
-                  <span className={`px-3 py-1 rounded-full text-sm ${
-                    project.difficulty === 'Débutant' ? 'bg-green-100 text-green-800' :
-                    project.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-red-100 text-red-800'
-                  }`}>
-                    {project.difficulty}
-                  </span>
-                </div>
-              </div>
+            <div className="px-4 sm:px-0">
+              <h3 className="text-base/7 font-semibold text-gray-900">{project.name}</h3>
+              <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">{project.description}</p>
             </div>
 
-            <p className="text-gray-700 text-lg mb-6">{project.description}</p>
-
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-3">Technologies utilisées</h2>
-              <div className="flex flex-wrap gap-2">
-                {(() => {
-                  const techs: string[] = Array.isArray(project.technologies) ? project.technologies : [];
-                  
-                  if (techs.length === 0) {
-                    return (
-                      <span className="text-gray-500 text-sm">Aucune technologie</span>
-                    );
-                  }
-
-                  return techs.map((tech: string, index: number) => (
-                    <span
-                      key={`${tech}-${index}`}
-                      className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
-                    >
-                      {tech}
+            <div className="mt-6 border-t border-gray-100">
+              <dl className="divide-y divide-gray-100">
+                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                  <dt className="text-sm/6 font-medium text-gray-900">Statut</dt>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      project.status === 'En cours' ? 'bg-yellow-100 text-yellow-800' :
+                      project.status === 'Terminé' ? 'bg-green-100 text-green-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}>
+                      {project.status}
                     </span>
-                  ));
-                })()}
-              </div>
-            </div>
+                  </dd>
+                </div>
 
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-3">Étudiants</h2>
-              <div className="flex flex-wrap gap-2">
-                {(project.students || []).map((student, index) => (
-                  <span
-                    key={index}
-                    className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm"
-                  >
-                    {student}
-                  </span>
-                ))}
-              </div>
-            </div>
+                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                  <dt className="text-sm/6 font-medium text-gray-900">Difficulté</dt>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    <span className={`px-3 py-1 rounded-full text-sm ${
+                      project.difficulty === 'Débutant' ? 'bg-green-100 text-green-800' :
+                      project.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-red-100 text-red-800'
+                    }`}>
+                      {project.difficulty}
+                    </span>
+                  </dd>
+                </div>
 
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-3">Tags</h2>
-              <div className="flex flex-wrap gap-2">
-                {(project.tags || []).map((tag, index) => (
-                  <span
-                    key={index}
-                    className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
+                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                  <dt className="text-sm/6 font-medium text-gray-900">Technologies</dt>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    <div className="flex flex-wrap gap-2">
+                      {project.technologies.map((tech, index) => (
+                        <span
+                          key={index}
+                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                        >
+                          {tech}
+                        </span>
+                      ))}
+                    </div>
+                  </dd>
+                </div>
 
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div>
-                <h2 className="text-xl font-semibold mb-2">Promotion</h2>
-                <p className="text-gray-700">{project.promotion}</p>
-              </div>
-              <div>
-                <h2 className="text-xl font-semibold mb-2">Catégorie</h2>
-                <p className="text-gray-700">{project.category}</p>
-              </div>
-            </div>
+                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                  <dt className="text-sm/6 font-medium text-gray-900">Étudiants</dt>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    <div className="flex flex-wrap gap-2">
+                      {project.students.map((student, index) => (
+                        <span
+                          key={index}
+                          className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm"
+                        >
+                          {student}
+                        </span>
+                      ))}
+                    </div>
+                  </dd>
+                </div>
 
-            <div className="flex gap-4">
-              {project.githubUrl && (
-                <a
-                  href={project.githubUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
-                >
-                  GitHub
-                </a>
-              )}
-              {project.demoUrl && (
-                <a
-                  href={project.demoUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  Voir la démo
-                </a>
-              )}
+                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                  <dt className="text-sm/6 font-medium text-gray-900">Tags</dt>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    <div className="flex flex-wrap gap-2">
+                      {project.tags.map((tag, index) => (
+                        <span
+                          key={index}
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </dd>
+                </div>
+
+                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                  <dt className="text-sm/6 font-medium text-gray-900">Promotion</dt>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">{project.promotion}</dd>
+                </div>
+
+                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                  <dt className="text-sm/6 font-medium text-gray-900">Catégorie</dt>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">{project.category}</dd>
+                </div>
+
+                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                  <dt className="text-sm/6 font-medium text-gray-900">Liens</dt>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    <div className="flex gap-4">
+                      {project.githubUrl && (
+                        <a
+                          href={project.githubUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
+                        >
+                          GitHub
+                        </a>
+                      )}
+                      {project.demoUrl && (
+                        <a
+                          href={project.demoUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                          Voir la démo
+                        </a>
+                      )}
+                    </div>
+                  </dd>
+                </div>
+
+                <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
+                  <dt className="text-sm/6 font-medium text-gray-900">Likes</dt>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    <button
+                      onClick={handleLike}
+                      disabled={likeLoading}
+                      className={`flex items-center gap-2 px-4 py-2 rounded-full transition-colors ${
+                        project.isLiked 
+                          ? 'bg-red-100 text-red-600' 
+                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      }`}
+                    >
+                      <span>{project.likes}</span>
+                      <svg 
+                        className={`w-5 h-5 ${project.isLiked ? 'fill-red-600' : 'fill-gray-600'}`}
+                        viewBox="0 0 24 24"
+                      >
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                      </svg>
+                    </button>
+                  </dd>
+                </div>
+              </dl>
             </div>
           </div>
         </div>
