@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Airtable Frontend
 
-## Getting Started
+## Description
+Frontend de l'application de gestion de projets ESGI, développé avec Next.js, TypeScript et Tailwind CSS. Cette application permet aux utilisateurs de visualiser, créer et gérer des projets, avec une interface moderne et responsive.
 
-First, run the development server:
+## Liens du projet
+- Frontend (ce repository) : https://github.com/zaengetsu/airtable-front
+- Backend : https://github.com/zaengetsu/airtable-back
 
+## Fonctionnalités
+- Authentification (connexion/déconnexion)
+- Visualisation des projets
+- Création et modification de projets (pour les admins et auteurs)
+- Interface responsive
+- Intégration avec l'API backend
+
+## Technologies utilisées
+- Next.js
+- TypeScript
+- Tailwind CSS
+- NextAuth.js pour l'authentification
+- Heroicons pour les icônes
+- React Query pour la gestion des données
+
+## Installation
+
+1. Cloner le repository :
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+git clone https://github.com/zaengetsu/airtable-front.git
+cd airtable-front
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2. Installer les dépendances :
+```bash
+npm install
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3. Lancer l'application en mode développement :
+```bash
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+L'application démarrera sur le port 3000.
 
-## Learn More
+## Structure de l'application
 
-To learn more about Next.js, take a look at the following resources:
+### Pages principales
+- `/` - Page d'accueil avec la liste des projets
+- `/projects/[projectID]` - Détails d'un projet
+- `/dashboard` - Tableau de bord admin
+- `/login` - Page de connexion
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Composants principaux
+- `ProjectCard` - Carte de présentation d'un projet
+- `ProjectForm` - Formulaire de création/modification de projet
+- `CommentSection` - Section des commentaires
+- `AuthProvider` - Gestion de l'authentification
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Compte test
+Pour tester l'application, vous pouvez utiliser le compte admin suivant :
+- Username : zango
+- Password : mespotes
 
-## Deploy on Vercel
+## Membres du projet
+- Leonce Yopa
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Design
+- Interface moderne et responsive
+- Utilisation de Tailwind CSS pour le style
+- Composants réutilisables
+- Design system cohérent
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
