@@ -4,17 +4,20 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
 interface Project {
   projectID: string;
   name: string;
   description: string;
-  technologies: string[];
+  technologies: string;
   thumbnail: string;
   status: 'En cours' | 'Terminé' | 'En pause';
   difficulty: 'Débutant' | 'Intermédiaire' | 'Avancé';
   category: string;
-  tags: string[];
+  tags: string;
   promotion: string;
+  students: string;
   githubUrl: string;
   demoUrl: string;
 }
@@ -25,33 +28,41 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const fetchProjects = async () => {
+    try {
+      const token = localStorage.getItem('token');
+      const headers: HeadersInit = {
+        'Accept': 'application/json'
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch(`${API_URL}/projects`, {
+        headers
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erreur lors de la récupération des projets');
+      }
+
+      const data = await response.json();
+      setProjects(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error('Erreur lors de la récupération des projets:', err);
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue lors de la récupération des projets');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (!token) {
       router.push('/login');
       return;
     }
-
-    const fetchProjects = async () => {
-      try {
-        const response = await fetch('/api/projects', {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
-
-        if (!response.ok) {
-          throw new Error('Erreur lors de la récupération des projets');
-        }
-
-        const data = await response.json();
-        setProjects(data);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
-      } finally {
-        setLoading(false);
-      }
-    };
 
     fetchProjects();
   }, [router]);
@@ -63,7 +74,7 @@ export default function AdminDashboard() {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`/api/projects/${projectId}`, {
+      const response = await fetch(`${API_URL}/projects/${projectId}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`
@@ -85,7 +96,27 @@ export default function AdminDashboard() {
   }
 
   if (error) {
-    return <div>Erreur: {error}</div>;
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <main className="container mx-auto p-4">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <h2 className="text-xl font-bold text-red-800 mb-2">Erreur</h2>
+            <p className="text-red-600">{error}</p>
+            <button
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                fetchProjects();
+              }}
+              className="mt-4 bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Réessayer
+            </button>
+          </div>
+        </main>
+      </div>
+    );
   }
 
   return (
@@ -102,6 +133,103 @@ export default function AdminDashboard() {
           </button>
         </div>
 
+        {/* Statistiques */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {/* Nombre total de projets */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Projets</h3>
+            <p className="text-3xl font-bold text-blue-600">{projects.length}</p>
+            <div className="mt-4">
+              <p className="text-sm text-gray-500">
+                {projects.filter(p => p.status === 'En cours').length} en cours
+              </p>
+              <p className="text-sm text-gray-500">
+                {projects.filter(p => p.status === 'Terminé').length} terminés
+              </p>
+            </div>
+          </div>
+
+          {/* Technologies utilisées */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Technologies</h3>
+            <p className="text-3xl font-bold text-green-600">
+              {new Set(projects.flatMap(p => p.technologies.split(', '))).size}
+            </p>
+            <div className="mt-4">
+              <p className="text-sm text-gray-500">
+                Technologies uniques
+              </p>
+            </div>
+          </div>
+
+          {/* Étudiants */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Étudiants</h3>
+            <p className="text-3xl font-bold text-purple-600">
+              {new Set(projects.flatMap(p => p.students.split(', '))).size}
+            </p>
+            <div className="mt-4">
+              <p className="text-sm text-gray-500">
+                Étudiants uniques
+              </p>
+            </div>
+          </div>
+
+          {/* Difficulté moyenne */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-700 mb-2">Difficulté</h3>
+            <div className="mt-2">
+              <p className="text-sm text-gray-500">
+                Débutant: {projects.filter(p => p.difficulty === 'Débutant').length}
+              </p>
+              <p className="text-sm text-gray-500">
+                Intermédiaire: {projects.filter(p => p.difficulty === 'Intermédiaire').length}
+              </p>
+              <p className="text-sm text-gray-500">
+                Avancé: {projects.filter(p => p.difficulty === 'Avancé').length}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Liste des étudiants et leurs projets */}
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4">Étudiants et leurs projets</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {Array.from(new Set(projects.flatMap(p => p.students.split(', '))))
+              .filter(student => student.trim() !== '')
+              .map(student => (
+                <div key={student} className="border rounded-lg p-4">
+                  <h3 className="font-semibold mb-2">{student}</h3>
+                  <ul className="text-sm text-gray-600">
+                    {projects
+                      .filter(p => p.students.includes(student))
+                      .map(p => (
+                        <li key={p.projectID} className="mb-1">
+                          {p.name} ({p.status})
+                        </li>
+                      ))}
+                  </ul>
+                </div>
+              ))}
+          </div>
+        </div>
+
+        {/* Technologies utilisées */}
+        <div className="bg-white rounded-lg shadow p-6 mb-8">
+          <h2 className="text-xl font-bold mb-4">Technologies utilisées</h2>
+          <div className="flex flex-wrap gap-2">
+            {Array.from(new Set(projects.flatMap(p => p.technologies.split(', '))))
+              .filter(tech => tech.trim() !== '')
+              .map(tech => (
+                <span key={tech} className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                  {tech} ({projects.filter(p => p.technologies.includes(tech)).length})
+                </span>
+              ))}
+          </div>
+        </div>
+
+        {/* Tableau des projets */}
         <div className="bg-white rounded-lg shadow overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
@@ -160,7 +288,7 @@ export default function AdminDashboard() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                     <button
-                      onClick={() => router.push(`/admin/edit/${project.projectID}`)}
+                      onClick={() => router.push(`/projects/${project.projectID}`)}
                       className="text-blue-600 hover:text-blue-900 mr-4"
                     >
                       Modifier

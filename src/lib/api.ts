@@ -28,6 +28,23 @@ export async function createProject(project: any) {
   return res.json();
 }
 
+export async function updateProject(id: string, project: any) {
+  const res = await fetch(\`\${API_BASE_URL}/api/projects/\${id}\`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(project)
+  });
+  return res.json();
+}
+
+export async function deleteProject(id: string) {
+  const res = await fetch(\`\${API_BASE_URL}/api/projects/\${id}\`, {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' }
+  });
+  return res.json();
+}
+
 export async function login(email: string, password: string) {
   const res = await fetch(\`\${API_BASE_URL}/api/auth/login\`, {
     method: 'POST',

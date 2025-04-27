@@ -28,12 +28,14 @@ export interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   isAuthor: (authorId: string) => boolean;
+  token: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
@@ -41,8 +43,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkAuth = () => {
       const userData = localStorage.getItem('user');
+      const storedToken = localStorage.getItem('token');
       if (userData) {
         setUser(JSON.parse(userData));
+      }
+      if (storedToken) {
+        setToken(storedToken);
       }
       setLoading(false);
     };
@@ -73,7 +79,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         role: data.role
       };
 
+      localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify(userData));
+      setToken(data.token);
       setUser(userData);
       setError(null);
     } catch (err) {
@@ -86,7 +94,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = () => {
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setUser(null);
+    setToken(null);
     router.push('/login');
   };
 
@@ -103,7 +113,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       logout,
       isAuthenticated,
       isAdmin,
-      isAuthor
+      isAuthor,
+      token
     }}>
       {children}
     </AuthContext.Provider>

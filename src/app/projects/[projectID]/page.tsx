@@ -1,26 +1,39 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import Header from '@/components/Header';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { PaperClipIcon } from '@heroicons/react/20/solid';
+import { PaperClipIcon, XMarkIcon } from '@heroicons/react/20/solid';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+
+const TECHNOLOGIES = [
+  'HTML', 'CSS', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Vue.js', 'Angular',
+  'Node.js', 'Express', 'NestJS', 'Python', 'Django', 'Flask', 'Java', 'Spring Boot',
+  'PHP', 'Laravel', 'Symfony', 'MySQL', 'PostgreSQL', 'MongoDB', 'Redis', 'Docker',
+  'Kubernetes', 'AWS', 'Azure', 'GCP', 'Git', 'GitHub', 'GitLab', 'CI/CD',
+  'REST API', 'GraphQL', 'WebSocket', 'JWT', 'OAuth', 'Sass', 'Tailwind CSS',
+  'Bootstrap', 'Material UI', 'Ant Design', 'Redux', 'MobX', 'Jest', 'Cypress',
+  'Webpack', 'Babel', 'ESLint', 'Prettier'
+];
+
+const STATUS_OPTIONS = ['En cours', 'Terminé', 'En pause'];
+const DIFFICULTY_OPTIONS = ['Débutant', 'Intermédiaire', 'Avancé'];
 
 interface Project {
   projectID: string;
   name: string;
   description: string;
-  technologies: string[];
+  technologies: string;
   thumbnail: string;
   status: 'En cours' | 'Terminé' | 'En pause';
   difficulty: 'Débutant' | 'Intermédiaire' | 'Avancé';
   category: string;
-  tags: string[];
+  tags: string;
   promotion: string;
-  students: string[];
+  students: string;
   githubUrl: string;
   demoUrl: string;
   likes: number;
@@ -31,11 +44,16 @@ interface Project {
 
 export default function ProjectDetail() {
   const params = useParams();
+  const router = useRouter();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [likeLoading, setLikeLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [newStudent, setNewStudent] = useState('');
+  const [newTag, setNewTag] = useState('');
+  const [newTechnology, setNewTechnology] = useState('');
   const { isAdmin, isAuthor } = useAuth();
 
   useEffect(() => {
@@ -59,7 +77,12 @@ export default function ProjectDetail() {
         }
 
         const data = await response.json();
-        setProject(data);
+        setProject({
+          ...data,
+          technologies: data.technologies || '',
+          students: data.students || '',
+          tags: data.tags || ''
+        });
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Une erreur est survenue');
       } finally {
@@ -101,6 +124,123 @@ export default function ProjectDetail() {
       setError(err instanceof Error ? err.message : 'Une erreur est survenue');
     } finally {
       setLikeLoading(false);
+    }
+  };
+
+  const handleUpdate = async () => {
+    if (!project) return;
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError('Vous devez être connecté pour modifier un projet');
+        return;
+      }
+
+      const response = await fetch(`${API_URL}/projects/${project.projectID}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(project)
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Erreur lors de la mise à jour');
+      }
+
+      setSuccessMessage('Projet mis à jour avec succès !');
+      setTimeout(() => setSuccessMessage(null), 3000);
+      setIsEditing(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!project) return;
+
+    if (window.confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
+      try {
+        const token = localStorage.getItem('token');
+        const response = await fetch(`${API_URL}/projects/${project.projectID}`, {
+          method: 'DELETE',
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'Erreur lors de la suppression');
+        }
+
+        router.push('/');
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Une erreur est survenue');
+      }
+    }
+  };
+
+  const addStudent = () => {
+    if (newStudent.trim() && project) {
+      setProject({
+        ...project,
+        students: project.students ? `${project.students}, ${newStudent.trim()}` : newStudent.trim()
+      });
+      setNewStudent('');
+    }
+  };
+
+  const removeStudent = (index: number) => {
+    if (project) {
+      const students = project.students.split(', ').filter((_, i) => i !== index);
+      setProject({
+        ...project,
+        students: students.join(', ')
+      });
+    }
+  };
+
+  const addTag = () => {
+    if (newTag.trim() && project) {
+      setProject({
+        ...project,
+        tags: project.tags ? `${project.tags}, ${newTag.trim()}` : newTag.trim()
+      });
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (index: number) => {
+    if (project) {
+      const tags = project.tags.split(', ').filter((_, i) => i !== index);
+      setProject({
+        ...project,
+        tags: tags.join(', ')
+      });
+    }
+  };
+
+  const addTechnology = () => {
+    if (newTechnology.trim() && project) {
+      setProject({
+        ...project,
+        technologies: project.technologies ? `${project.technologies}, ${newTechnology.trim()}` : newTechnology.trim()
+      });
+      setNewTechnology('');
+    }
+  };
+
+  const removeTechnology = (techToRemove: string) => {
+    if (project) {
+      const techs = project.technologies.split(', ').filter(tech => tech !== techToRemove);
+      setProject({
+        ...project,
+        technologies: techs.join(', ')
+      });
     }
   };
 
@@ -151,18 +291,14 @@ export default function ProjectDetail() {
           </Link>
           {canEdit && (
             <div className="flex gap-2">
-              <Link
-                href={`/projects/${project.projectID}/edit`}
+              <button
+                onClick={() => setIsEditing(!isEditing)}
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
               >
-                Modifier
-              </Link>
+                {isEditing ? 'Annuler' : 'Modifier'}
+              </button>
               <button
-                onClick={() => {
-                  if (window.confirm('Êtes-vous sûr de vouloir supprimer ce projet ?')) {
-                    // Appel API pour supprimer le projet
-                  }
-                }}
+                onClick={handleDelete}
                 className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
               >
                 Supprimer
@@ -184,8 +320,32 @@ export default function ProjectDetail() {
 
           <div className="p-6">
             <div className="px-4 sm:px-0">
-              <h3 className="text-base/7 font-semibold text-gray-900">{project.name}</h3>
-              <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">{project.description}</p>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Nom du projet</label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={project.name}
+                    onChange={(e) => setProject({ ...project, name: e.target.value })}
+                    className="text-base/7 font-semibold text-gray-900 w-full p-2 border rounded"
+                  />
+                ) : (
+                  <h3 className="text-base/7 font-semibold text-gray-900">{project.name}</h3>
+                )}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                {isEditing ? (
+                  <textarea
+                    value={project.description}
+                    onChange={(e) => setProject({ ...project, description: e.target.value })}
+                    className="mt-1 max-w-2xl text-sm/6 text-gray-500 w-full p-2 border rounded"
+                    rows={3}
+                  />
+                ) : (
+                  <p className="mt-1 max-w-2xl text-sm/6 text-gray-500">{project.description}</p>
+                )}
+              </div>
             </div>
 
             <div className="mt-6 border-t border-gray-100">
@@ -193,26 +353,50 @@ export default function ProjectDetail() {
                 <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                   <dt className="text-sm/6 font-medium text-gray-900">Statut</dt>
                   <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      project.status === 'En cours' ? 'bg-yellow-100 text-yellow-800' :
-                      project.status === 'Terminé' ? 'bg-green-100 text-green-800' :
-                      'bg-gray-100 text-gray-800'
-                    }`}>
-                      {project.status}
-                    </span>
+                    {isEditing ? (
+                      <select
+                        value={project.status}
+                        onChange={(e) => setProject({ ...project, status: e.target.value as any })}
+                        className="border rounded p-2 w-full"
+                      >
+                        {STATUS_OPTIONS.map(status => (
+                          <option key={status} value={status}>{status}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        project.status === 'En cours' ? 'bg-yellow-100 text-yellow-800' :
+                        project.status === 'Terminé' ? 'bg-green-100 text-green-800' :
+                        'bg-gray-100 text-gray-800'
+                      }`}>
+                        {project.status}
+                      </span>
+                    )}
                   </dd>
                 </div>
 
                 <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                   <dt className="text-sm/6 font-medium text-gray-900">Difficulté</dt>
                   <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
-                    <span className={`px-3 py-1 rounded-full text-sm ${
-                      project.difficulty === 'Débutant' ? 'bg-green-100 text-green-800' :
-                      project.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-800' :
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {project.difficulty}
-                    </span>
+                    {isEditing ? (
+                      <select
+                        value={project.difficulty}
+                        onChange={(e) => setProject({ ...project, difficulty: e.target.value as any })}
+                        className="border rounded p-2 w-full"
+                      >
+                        {DIFFICULTY_OPTIONS.map(difficulty => (
+                          <option key={difficulty} value={difficulty}>{difficulty}</option>
+                        ))}
+                      </select>
+                    ) : (
+                      <span className={`px-3 py-1 rounded-full text-sm ${
+                        project.difficulty === 'Débutant' ? 'bg-green-100 text-green-800' :
+                        project.difficulty === 'Intermédiaire' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}>
+                        {project.difficulty}
+                      </span>
+                    )}
                   </dd>
                 </div>
 
@@ -220,15 +404,43 @@ export default function ProjectDetail() {
                   <dt className="text-sm/6 font-medium text-gray-900">Technologies</dt>
                   <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
                     <div className="flex flex-wrap gap-2">
-                      {project.technologies.map((tech, index) => (
+                      {project.technologies.split(', ').map((tech, index) => (
                         <span
                           key={index}
-                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                          className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm flex items-center gap-1"
                         >
                           {tech}
+                          {isEditing && (
+                            <button
+                              onClick={() => removeTechnology(tech)}
+                              className="text-blue-800 hover:text-blue-900"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          )}
                         </span>
                       ))}
                     </div>
+                    {isEditing && (
+                      <div className="mt-2">
+                        <select
+                          value={newTechnology}
+                          onChange={(e) => setNewTechnology(e.target.value)}
+                          className="border rounded p-2 w-full"
+                        >
+                          <option value="">Sélectionner une technologie</option>
+                          {TECHNOLOGIES.map(tech => (
+                            <option key={tech} value={tech}>{tech}</option>
+                          ))}
+                        </select>
+                        <button
+                          onClick={addTechnology}
+                          className="mt-2 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors"
+                        >
+                          Ajouter
+                        </button>
+                      </div>
+                    )}
                   </dd>
                 </div>
 
@@ -236,15 +448,41 @@ export default function ProjectDetail() {
                   <dt className="text-sm/6 font-medium text-gray-900">Étudiants</dt>
                   <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
                     <div className="flex flex-wrap gap-2">
-                      {project.students.map((student, index) => (
+                      {project.students.split(', ').map((student, index) => (
                         <span
                           key={index}
-                          className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm"
+                          className="bg-purple-100 text-purple-800 px-3 py-1 rounded-full text-sm flex items-center gap-1"
                         >
                           {student}
+                          {isEditing && (
+                            <button
+                              onClick={() => removeStudent(index)}
+                              className="text-purple-800 hover:text-purple-900"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          )}
                         </span>
                       ))}
                     </div>
+                    {isEditing && (
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          type="text"
+                          value={newStudent}
+                          onChange={(e) => setNewStudent(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && addStudent()}
+                          placeholder="Ajouter un étudiant"
+                          className="border rounded p-1 text-sm"
+                        />
+                        <button
+                          onClick={addStudent}
+                          className="bg-purple-600 text-white px-2 py-1 rounded text-sm"
+                        >
+                          Ajouter
+                        </button>
+                      </div>
+                    )}
                   </dd>
                 </div>
 
@@ -252,51 +490,120 @@ export default function ProjectDetail() {
                   <dt className="text-sm/6 font-medium text-gray-900">Tags</dt>
                   <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
                     <div className="flex flex-wrap gap-2">
-                      {project.tags.map((tag, index) => (
+                      {project.tags.split(', ').map((tag, index) => (
                         <span
                           key={index}
-                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm"
+                          className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm flex items-center gap-1"
                         >
                           {tag}
+                          {isEditing && (
+                            <button
+                              onClick={() => removeTag(index)}
+                              className="text-gray-800 hover:text-gray-900"
+                            >
+                              <XMarkIcon className="h-4 w-4" />
+                            </button>
+                          )}
                         </span>
                       ))}
                     </div>
+                    {isEditing && (
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          type="text"
+                          value={newTag}
+                          onChange={(e) => setNewTag(e.target.value)}
+                          onKeyPress={(e) => e.key === 'Enter' && addTag()}
+                          placeholder="Ajouter un tag"
+                          className="border rounded p-1 text-sm"
+                        />
+                        <button
+                          onClick={addTag}
+                          className="bg-gray-600 text-white px-2 py-1 rounded text-sm"
+                        >
+                          Ajouter
+                        </button>
+                      </div>
+                    )}
                   </dd>
                 </div>
 
                 <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                   <dt className="text-sm/6 font-medium text-gray-900">Promotion</dt>
-                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">{project.promotion}</dd>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={project.promotion}
+                        onChange={(e) => setProject({ ...project, promotion: e.target.value })}
+                        className="border rounded p-2 w-full"
+                      />
+                    ) : (
+                      project.promotion
+                    )}
+                  </dd>
                 </div>
 
                 <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                   <dt className="text-sm/6 font-medium text-gray-900">Catégorie</dt>
-                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">{project.category}</dd>
+                  <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={project.category}
+                        onChange={(e) => setProject({ ...project, category: e.target.value })}
+                        className="border rounded p-2 w-full"
+                      />
+                    ) : (
+                      project.category
+                    )}
+                  </dd>
                 </div>
 
                 <div className="px-4 py-6 sm:grid sm:grid-cols-3 sm:gap-4 sm:px-0">
                   <dt className="text-sm/6 font-medium text-gray-900">Liens</dt>
                   <dd className="mt-1 text-sm/6 text-gray-700 sm:col-span-2 sm:mt-0">
                     <div className="flex gap-4">
-                      {project.githubUrl && (
-                        <a
-                          href={project.githubUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
-                        >
-                          GitHub
-                        </a>
-                      )}
-                      {project.demoUrl && (
-                        <a
-                          href={project.demoUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                          Voir la démo
-                        </a>
+                      {isEditing ? (
+                        <>
+                          <input
+                            type="text"
+                            value={project.githubUrl}
+                            onChange={(e) => setProject({ ...project, githubUrl: e.target.value })}
+                            placeholder="URL GitHub"
+                            className="border rounded p-2"
+                          />
+                          <input
+                            type="text"
+                            value={project.demoUrl}
+                            onChange={(e) => setProject({ ...project, demoUrl: e.target.value })}
+                            placeholder="URL de la démo"
+                            className="border rounded p-2"
+                          />
+                        </>
+                      ) : (
+                        <>
+                          {project.githubUrl && (
+                            <a
+                              href={project.githubUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-gray-900 text-white px-4 py-2 rounded-lg hover:bg-gray-800 transition-colors flex items-center gap-2"
+                            >
+                              GitHub
+                            </a>
+                          )}
+                          {project.demoUrl && (
+                            <a
+                              href={project.demoUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                            >
+                              Voir la démo
+                            </a>
+                          )}
+                        </>
                       )}
                     </div>
                   </dd>
@@ -328,6 +635,17 @@ export default function ProjectDetail() {
             </div>
           </div>
         </div>
+
+        {isEditing && (
+          <div className="fixed bottom-4 right-4">
+            <button
+              onClick={handleUpdate}
+              className="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700 transition-colors"
+            >
+              Enregistrer les modifications
+            </button>
+          </div>
+        )}
       </main>
     </div>
   );

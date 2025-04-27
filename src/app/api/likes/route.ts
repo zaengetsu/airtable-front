@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
-import { Airtable } from '@/lib/airtable';
-
-const airtable = new Airtable();
+import { likeProject } from '@/lib/api';
 
 export async function POST(request: Request) {
   try {
@@ -12,13 +10,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    const { projectId, userId } = await request.json();
-    if (!projectId || !userId) {
+    const { projectId } = await request.json();
+    if (!projectId) {
       return NextResponse.json({ error: 'Données manquantes' }, { status: 400 });
     }
 
-    const like = await airtable.toggleLike(projectId, userId);
-    return NextResponse.json(like);
+    const result = await likeProject(projectId);
+    return NextResponse.json(result);
   } catch (error) {
     console.error('Erreur lors de la gestion du like:', error);
     return NextResponse.json(
@@ -32,14 +30,13 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
-    const userId = searchParams.get('userId');
 
-    if (!projectId || !userId) {
+    if (!projectId) {
       return NextResponse.json({ error: 'Données manquantes' }, { status: 400 });
     }
 
-    const hasLiked = await airtable.hasUserLiked(projectId, userId);
-    return NextResponse.json({ hasLiked });
+    const project = await fetchProjectById(projectId);
+    return NextResponse.json({ hasLiked: project.likes > 0 });
   } catch (error) {
     console.error('Erreur lors de la vérification du like:', error);
     return NextResponse.json(

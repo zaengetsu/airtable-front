@@ -1,14 +1,12 @@
 import { NextResponse } from 'next/server';
-import { AirtableService } from '@/lib/airtable';
-
-const airtable = new AirtableService();
+import { fetchProjectById, updateProject, deleteProject } from '@/lib/api';
 
 export async function GET(
   request: Request,
   { params }: { params: { projectID: string } }
 ) {
   try {
-    const project = await airtable.getProjectById(params.projectID);
+    const project = await fetchProjectById(params.projectID);
     return NextResponse.json(project);
   } catch (error) {
     console.error('Erreur lors de la récupération du projet:', error);
@@ -27,8 +25,13 @@ export async function PUT(
     }
 
     const body = await request.json();
-    // TODO: Implémenter la mise à jour du projet dans Airtable
-    return NextResponse.json({ message: 'Projet mis à jour' });
+    const updatedProject = await updateProject(params.projectID, body);
+    
+    if (!updatedProject) {
+      return NextResponse.json({ error: 'Erreur lors de la mise à jour du projet' }, { status: 500 });
+    }
+
+    return NextResponse.json(updatedProject);
   } catch (error) {
     console.error('Erreur lors de la mise à jour du projet:', error);
     return NextResponse.json({ error: 'Erreur serveur' }, { status: 500 });
@@ -45,7 +48,7 @@ export async function DELETE(
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });
     }
 
-    // TODO: Implémenter la suppression du projet dans Airtable
+    await deleteProject(params.projectID);
     return NextResponse.json({ message: 'Projet supprimé' });
   } catch (error) {
     console.error('Erreur lors de la suppression du projet:', error);

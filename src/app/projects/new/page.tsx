@@ -4,20 +4,21 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 // import ImageUpload from '@/src/components/ImageUpload';
+import { XMarkIcon } from '@heroicons/react/24/outline';
 
 interface ProjectForm {
   name: string;
   description: string;
-  technologies: string[];
+  technologies: string;
   projectLink?: string;
   githubLink?: string;
   demoLink?: string;
-  images: string[];
+  images: string;
   thumbnail?: string;
   promotion: string;
-  students: string[];
+  students: string;
   category: string;
-  tags: string[];
+  tags: string;
   status: 'En cours' | 'Terminé' | 'En pause';
   difficulty: 'Débutant' | 'Intermédiaire' | 'Avancé';
   startDate: string;
@@ -33,16 +34,16 @@ export default function NewProject() {
   const [formData, setFormData] = useState<ProjectForm>({
     name: '',
     description: '',
-    technologies: [],
+    technologies: '',
     projectLink: '',
     githubLink: '',
     demoLink: '',
-    images: [],
+    images: '',
     thumbnail: '',
     promotion: '',
-    students: [],
+    students: '',
     category: '',
-    tags: [],
+    tags: '',
     status: 'En cours',
     difficulty: 'Débutant',
     startDate: new Date().toISOString(),
@@ -58,6 +59,7 @@ export default function NewProject() {
   const [categories, setCategories] = useState<string[]>([]);
   const [difficulties, setDifficulties] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<string[]>([]);
+  const [newTag, setNewTag] = useState('');
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -142,37 +144,41 @@ export default function NewProject() {
     }
   };
 
-  const addTag = () => {
-    if (currentTag && !formData.tags.includes(currentTag)) {
-      setFormData({
-        ...formData,
-        tags: [...formData.tags, currentTag]
-      });
-      setCurrentTag('');
+  const handleAddTag = () => {
+    if (newTag.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        tags: prev.tags ? `${prev.tags}, ${newTag.trim()}` : newTag.trim()
+      }));
+      setNewTag('');
     }
   };
 
-  const removeTag = (tagToRemove: string) => {
-    setFormData({
-      ...formData,
-      tags: formData.tags.filter(tag => tag !== tagToRemove)
-    });
+  const handleRemoveTag = (tagToRemove: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags
+        .split(', ')
+        .filter(tag => tag !== tagToRemove)
+        .join(', ')
+    }));
   };
 
   const addTechnology = () => {
     if (currentTechnology && !formData.technologies.includes(currentTechnology)) {
       setFormData({
         ...formData,
-        technologies: [...formData.technologies, currentTechnology]
+        technologies: formData.technologies ? `${formData.technologies}, ${currentTechnology}` : currentTechnology
       });
       setCurrentTechnology('');
     }
   };
 
   const removeTechnology = (techToRemove: string) => {
+    const techs = formData.technologies.split(', ').filter(tech => tech !== techToRemove);
     setFormData({
       ...formData,
-      technologies: formData.technologies.filter(tech => tech !== techToRemove)
+      technologies: techs.join(', ')
     });
   };
 
@@ -296,7 +302,7 @@ export default function NewProject() {
                   </button>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {formData.technologies.map((tech) => (
+                  {formData.technologies.split(', ').map((tech) => (
                     <span
                       key={tech}
                       className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700"
@@ -319,35 +325,37 @@ export default function NewProject() {
                 <div className="mt-2 flex gap-2">
                   <input
                     type="text"
-                    value={currentTag}
-                    onChange={(e) => setCurrentTag(e.target.value)}
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
                     placeholder="Ajouter un tag"
                   />
                   <button
                     type="button"
-                    onClick={addTag}
+                    onClick={handleAddTag}
                     className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white shadow-xs hover:bg-indigo-500"
                   >
                     Ajouter
                   </button>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-2">
-                  {formData.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700"
-                    >
-                      {tag}
-                      <button
-                        type="button"
-                        onClick={() => removeTag(tag)}
-                        className="text-indigo-600 hover:text-indigo-800"
+                  {formData.tags ? (
+                    formData.tags.split(', ').map((tag) => (
+                      <span
+                        key={tag}
+                        className="inline-flex items-center gap-1 rounded-full bg-indigo-100 px-2 py-1 text-xs font-medium text-indigo-700"
                       >
-                        ×
-                      </button>
-                    </span>
-                  ))}
+                        {tag}
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveTag(tag)}
+                          className="text-indigo-600 hover:text-indigo-800"
+                        >
+                          <XMarkIcon className="h-3 w-3" />
+                        </button>
+                      </span>
+                    ))
+                  ) : null}
                 </div>
               </div>
             </div>

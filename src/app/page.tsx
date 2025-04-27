@@ -10,14 +10,14 @@ interface Project {
   projectID: string;
   name: string;
   description: string;
-  technologies: string[];
+  technologies: string;
   thumbnail: string;
   status: 'En cours' | 'Terminé' | 'En pause';
   difficulty: 'Débutant' | 'Intermédiaire' | 'Avancé';
   category: string;
-  tags: string[];
+  tags: string;
   promotion: string;
-  students: string[];
+  students: string;
   githubUrl: string;
   demoUrl: string;
   likes: number;
@@ -78,16 +78,16 @@ export default function Home() {
     const matchesSearch = 
       (project.name?.toLowerCase() || '').includes(searchTermLower) ||
       (project.description?.toLowerCase() || '').includes(searchTermLower) ||
-      (project.technologies || []).some(tech => (tech?.toLowerCase() || '').includes(searchTermLower)) ||
-      (project.tags || []).some(tag => (tag?.toLowerCase() || '').includes(searchTermLower)) ||
-      (project.students || []).some(student => (student?.toLowerCase() || '').includes(searchTermLower));
+      (project.technologies?.toLowerCase() || '').includes(searchTermLower) ||
+      (project.tags?.toLowerCase() || '').includes(searchTermLower) ||
+      (project.students?.toLowerCase() || '').includes(searchTermLower);
 
     const matchesFilters = 
       (!filters.difficulty || project.difficulty === filters.difficulty) &&
       (!filters.status || project.status === filters.status) &&
       (!filters.category || project.category === filters.category) &&
       (!filters.promotion || project.promotion === filters.promotion) &&
-      (!filters.tag || (project.tags || []).includes(filters.tag));
+      (!filters.tag || (project.tags?.includes(filters.tag) || false));
 
     return matchesSearch && matchesFilters;
   });
@@ -162,7 +162,7 @@ export default function Home() {
             </select>
           </div>
           <div className="flex flex-wrap gap-2 mb-6">
-            {Array.from(new Set(projects.flatMap(p => p.tags || []))).map(tag => (
+            {Array.from(new Set(projects.flatMap(p => p.tags?.split(', ') || []))).map(tag => (
               <button
                 key={tag}
                 className={`px-3 py-1 rounded-full text-sm ${
@@ -180,7 +180,7 @@ export default function Home() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredProjects.map((project) => (
-            <div key={project.projectID} className="bg-white rounded-lg shadow-md overflow-hidden">
+            <div key={project.projectID} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
               {project.thumbnail && (
                 <img
                   src={project.thumbnail}
@@ -196,33 +196,55 @@ export default function Home() {
                   </div>
                 </div>
                 <p className="text-gray-600 mb-4 line-clamp-2">{project.description}</p>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {(() => {
-                    const techs: string[] = Array.isArray(project.technologies) ? project.technologies : [];
-                    const displayTechs: string[] = techs.slice(0, 3);
-                    
-                    if (displayTechs.length === 0) {
-                      return (
-                        <span className="text-gray-500 text-sm">Aucune technologie</span>
-                      );
-                    }
-
-                    return (
-                      <>
-                        {displayTechs.map((tech: string, index: number) => (
-                          <span key={`${tech}-${index}`} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
-                            {tech}
-                          </span>
-                        ))}
-                        {techs.length > 3 && (
-                          <span className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">
-                            +{techs.length - 3}
-                          </span>
-                        )}
-                      </>
-                    );
-                  })()}
+                
+                {/* Technologies */}
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Technologies</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {project.technologies ? (
+                      project.technologies.split(', ').map((tech, index) => (
+                        <span key={index} className="bg-blue-100 text-blue-800 px-2 py-1 rounded text-sm">
+                          {tech}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-500 text-sm">Aucune technologie</span>
+                    )}
+                  </div>
                 </div>
+
+                {/* Membres */}
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Membres</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {project.students ? (
+                      project.students.split(', ').map((student, index) => (
+                        <span key={index} className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-sm">
+                          {student}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-500 text-sm">Aucun membre</span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tags */}
+                <div className="mb-4">
+                  <h3 className="text-sm font-medium text-gray-700 mb-2">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {project.tags ? (
+                      project.tags.split(', ').map((tag, index) => (
+                        <span key={index} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-sm">
+                          {tag}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-500 text-sm">Aucun tag</span>
+                    )}
+                  </div>
+                </div>
+
                 <div className="flex justify-between items-center mb-4">
                   <span className="text-sm text-gray-500">{project.promotion}</span>
                   <span className="text-sm text-gray-500">{project.category}</span>
