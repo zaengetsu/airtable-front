@@ -192,7 +192,7 @@ export default function NewProject() {
 
             <div className="mt-10 grid grid-cols-1 gap-x-6 gap-y-8 sm:grid-cols-6">
               <div className="sm:col-span-4">
-                <label htmlFor="name" className="block text-sm/6 font-medium text-gray-900">Nom du projet</label>
+                <label htmlFor="name" className="block text-sm/6 font-medium text-gray-900">Nom du projet *</label>
                 <div className="mt-2">
                   <input
                     type="text"
@@ -205,8 +205,41 @@ export default function NewProject() {
                 </div>
               </div>
 
+              <div className="sm:col-span-4">
+                <label htmlFor="category" className="block text-sm/6 font-medium text-gray-900">Catégorie *</label>
+                <div className="mt-2">
+                  <select
+                    id="category"
+                    value={formData.category}
+                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                    required
+                  >
+                    <option value="">Sélectionnez une catégorie</option>
+                    {categories.map((category) => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="sm:col-span-4">
+                <label htmlFor="promotion" className="block text-sm/6 font-medium text-gray-900">Promotion *</label>
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    id="promotion"
+                    value={formData.promotion}
+                    onChange={(e) => setFormData({ ...formData, promotion: e.target.value })}
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                    placeholder="Ex: M2 S2"
+                    required
+                  />
+                </div>
+              </div>
+
               <div className="col-span-full">
-                <label htmlFor="description" className="block text-sm/6 font-medium text-gray-900">Description</label>
+                <label htmlFor="description" className="block text-sm/6 font-medium text-gray-900">Description *</label>
                 <div className="mt-2">
                   <textarea
                     id="description"
@@ -220,25 +253,16 @@ export default function NewProject() {
               </div>
 
               <div className="col-span-full">
-                <label htmlFor="thumbnail" className="block text-sm/6 font-medium text-gray-900">Image de couverture</label>
-                <div className="mt-2 flex justify-center rounded-lg border border-dashed border-gray-900/25 px-6 py-10">
-                  <div className="text-center">
-                    {formData.thumbnail ? (
-                      <img src={formData.thumbnail} alt="Thumbnail" className="mx-auto h-32 w-32 object-cover" />
-                    ) : (
-                      <svg className="mx-auto h-12 w-12 text-gray-300" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-                        <path fillRule="evenodd" d="M1.5 6a2.25 2.25 0 012.25-2.25h16.5A2.25 2.25 0 0122.5 6v12a2.25 2.25 0 01-2.25 2.25H3.75A2.25 2.25 0 011.5 18V6zM3 16.06V18c0 .414.336.75.75.75h16.5A.75.75 0 0021 18v-1.94l-2.69-2.689a1.5 1.5 0 00-2.12 0l-.88.879.97.97a.75.75 0 11-1.06 1.06l-5.16-5.159a1.5 1.5 0 00-2.12 0L3 16.061zm10.125-7.81a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0z" clipRule="evenodd" />
-                      </svg>
-                    )}
-                    <div className="mt-4 flex text-sm/6 text-gray-600">
-                      <label htmlFor="file-upload" className="relative cursor-pointer rounded-md bg-white font-semibold text-indigo-600 focus-within:ring-2 focus-within:ring-indigo-600 focus-within:ring-offset-2 focus-within:outline-hidden hover:text-indigo-500">
-                        <span>Uploader une image</span>
-                        <input id="file-upload" name="file-upload" type="file" className="sr-only" onChange={handleImageUpload} />
-                      </label>
-                      <p className="pl-1">ou glisser-déposer</p>
-                    </div>
-                    <p className="text-xs/5 text-gray-600">PNG, JPG, GIF jusqu'à 10MB</p>
-                  </div>
+                <label htmlFor="students" className="block text-sm/6 font-medium text-gray-900">Étudiants</label>
+                <div className="mt-2">
+                  <input
+                    type="text"
+                    id="students"
+                    value={formData.students}
+                    onChange={(e) => setFormData({ ...formData, students: e.target.value })}
+                    className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                    placeholder="Séparez les noms par des virgules"
+                  />
                 </div>
               </div>
             </div>
@@ -393,7 +417,7 @@ export default function NewProject() {
               </div>
 
               <div className="sm:col-span-3">
-                <label htmlFor="startDate" className="block text-sm/6 font-medium text-gray-900">Date de début</label>
+                <label htmlFor="startDate" className="block text-sm/6 font-medium text-gray-900">Date de début *</label>
                 <div className="mt-2">
                   <input
                     type="date"
@@ -407,14 +431,24 @@ export default function NewProject() {
               </div>
 
               <div className="sm:col-span-3">
-                <label htmlFor="endDate" className="block text-sm/6 font-medium text-gray-900">Date de fin</label>
+                <label htmlFor="endDate" className="block text-sm/6 font-medium text-gray-900">Date de fin *</label>
                 <div className="mt-2">
                   <input
                     type="date"
                     id="endDate"
                     value={formData.endDate?.split('T')[0] || ''}
-                    onChange={(e) => setFormData({ ...formData, endDate: e.target.value ? new Date(e.target.value).toISOString() : '' })}
+                    onChange={(e) => {
+                      const endDate = new Date(e.target.value).toISOString();
+                      if (new Date(endDate) < new Date(formData.startDate)) {
+                        setError('La date de fin doit être postérieure à la date de début');
+                        return;
+                      }
+                      setFormData({ ...formData, endDate });
+                      setError(null);
+                    }}
+                    min={formData.startDate.split('T')[0]}
                     className="block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6"
+                    required
                   />
                 </div>
               </div>
